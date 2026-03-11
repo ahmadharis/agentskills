@@ -69,8 +69,6 @@ git commit -m "$(cat <<'EOF'
 <type>(<scope>): <subject>
 
 <body>
-
-Co-Authored-By: Claude <noreply@anthropic.com>
 EOF
 )"
 ```

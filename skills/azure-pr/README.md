@@ -89,8 +89,6 @@ Uses conventional commit format:
 <type>(<scope>): <subject>
 
 <body>
-
-Co-Authored-By: Claude <noreply@anthropic.com>
 ```
 
 ## Example
