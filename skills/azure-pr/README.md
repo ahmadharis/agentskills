@@ -47,6 +47,13 @@ No manual configuration needed — just make sure your `origin` remote points to
 /azure-pr --work-items 12345 67890
 ```
 
+When installed as a plugin, use the namespaced command:
+
+```
+/agentskills:azure-pr
+/agentskills:azure-pr --work-items 12345
+```
+
 You can also just mention work item numbers naturally:
 - "Create a PR for item 12345"
 - "Push and create a PR, link #12345"

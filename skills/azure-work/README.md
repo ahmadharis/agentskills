@@ -101,6 +101,15 @@ Lists all open work items (or filtered by tag if `ADO_WORK_ITEM_FILTER` is set).
 
 Jumps directly to work item 12345 — no listing step.
 
+### Plugin (Namespaced) Commands
+
+When installed as a plugin, use the namespaced command:
+
+```
+/agentskills:azure-work
+/agentskills:azure-work 12345
+```
+
 ## Full Workflow
 
 ```

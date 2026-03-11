@@ -12,16 +12,18 @@ These skills follow the [Agent Skills](https://agentskills.io) open standard and
 | [azure-pr](skills/azure-pr/) | `/azure-pr` | Create pull requests in Azure DevOps |
 | [pr-complete](skills/pr-complete/) | `/pr-complete` | Post-merge branch cleanup |
 
+> When installed as a plugin, skills are namespaced: `/agentskills:azure-work`, `/agentskills:azure-pr`, `/agentskills:pr-complete`. When installed manually, the short names above apply.
+
 ## Workflow
 
 The three skills compose into a full development cycle:
 
 ```
-/azure-work → pick up item, create branch, implement
+/agentskills:azure-work → pick up item, create branch, implement
       ↓
-/azure-pr --work-items <id> → push and create PR
+/agentskills:azure-pr --work-items <id> → push and create PR
       ↓
-/pr-complete → post-merge cleanup
+/agentskills:pr-complete → post-merge cleanup
 ```
 
 ## Prerequisites
@@ -52,13 +54,39 @@ az login --allow-no-subscriptions
 
 ## Installation
 
-Install individual skills — pick only what you need.
+### Claude Code (recommended)
 
-### Option A: Per-Project (recommended for teams)
+Install as a plugin for auto-updates and one-command setup:
 
-Skills live in the project's `.claude/skills/` directory. Commit them to the repo so the whole team gets them.
+```
+# Add the marketplace (one-time)
+/plugin marketplace add ahmadharis/agentskills
 
-**macOS / Linux:**
+# Install the plugin
+/plugin install agentskills@ahmadharis-agentskills
+```
+
+Skills become available as `/agentskills:azure-work`, `/agentskills:azure-pr`, and `/agentskills:pr-complete`.
+
+The marketplace auto-update mechanism keeps skills current — no need to manually pull updates.
+
+### Codex CLI
+
+Install individual skills using the `$skill-installer`:
+
+```bash
+$skill-installer install https://github.com/ahmadharis/agentskills/tree/main/skills/azure-work
+$skill-installer install https://github.com/ahmadharis/agentskills/tree/main/skills/azure-pr
+$skill-installer install https://github.com/ahmadharis/agentskills/tree/main/skills/pr-complete
+```
+
+### Manual Installation
+
+Copy skills directly into your skills directory. Pick only what you need.
+
+**Per-project (recommended for teams)** — commit to the repo so the whole team gets them:
+
+macOS / Linux:
 
 ```bash
 git clone https://github.com/ahmadharis/agentskills.git /tmp/agentskills
@@ -67,7 +95,7 @@ cp -r /tmp/agentskills/skills/azure-work .claude/skills/
 cp -r /tmp/agentskills/skills/pr-complete .claude/skills/
 ```
 
-**Windows (PowerShell):**
+Windows (PowerShell):
 
 ```powershell
 git clone https://github.com/ahmadharis/agentskills.git $env:TEMP\agentskills
@@ -76,11 +104,9 @@ Copy-Item -Recurse $env:TEMP\agentskills\skills\azure-work .claude\skills\
 Copy-Item -Recurse $env:TEMP\agentskills\skills\pr-complete .claude\skills\
 ```
 
-### Option B: Global (for personal use across all projects)
+**Global (for personal use across all projects):**
 
-Skills installed once in `~/.claude/skills/`. Available in every project.
-
-**macOS / Linux:**
+macOS / Linux:
 
 ```bash
 git clone https://github.com/ahmadharis/agentskills.git /tmp/agentskills
@@ -89,7 +115,7 @@ cp -r /tmp/agentskills/skills/azure-work ~/.claude/skills/
 cp -r /tmp/agentskills/skills/pr-complete ~/.claude/skills/
 ```
 
-**Windows (PowerShell):**
+Windows (PowerShell):
 
 ```powershell
 git clone https://github.com/ahmadharis/agentskills.git $env:TEMP\agentskills
@@ -98,7 +124,7 @@ Copy-Item -Recurse $env:TEMP\agentskills\skills\azure-work $env:USERPROFILE\.cla
 Copy-Item -Recurse $env:TEMP\agentskills\skills\pr-complete $env:USERPROFILE\.claude\skills\
 ```
 
-After installing, restart Claude Code and verify the skills appear in the `/` menu.
+After manual installation, restart Claude Code and verify the skills appear in the `/` menu.
 
 ## Configuration
 
@@ -106,7 +132,7 @@ Configuration is always per-project via `.claude/settings.local.json`, regardles
 
 ### Automatic Setup
 
-`azure-work` prompts for your backlog URL on first run and saves configuration automatically. Just run `/azure-work` and follow the prompts.
+`azure-work` prompts for your backlog URL on first run and saves configuration automatically. Just run `/azure-work` (or `/agentskills:azure-work`) and follow the prompts.
 
 ### Manual Setup
 
@@ -154,10 +180,11 @@ When unset, all open work items are listed. Direct mode (`/azure-work 12345`) al
 
 These skills use the [Agent Skills](https://agentskills.io) open standard (`SKILL.md` with YAML frontmatter), so they work beyond Claude Code.
 
-| Platform | Install to | Status |
-|----------|-----------|--------|
-| Claude Code | `.claude/skills/` or `~/.claude/skills/` | Full support |
-| Codex CLI | `.agents/skills/` or `~/.agents/skills/` | Core workflow works. `azure-work` skill-chaining steps (`superpowers:brainstorming`, etc.) are skipped gracefully. |
+| Platform | Install Method | Status |
+|----------|---------------|--------|
+| Claude Code | Plugin (`/plugin install`) | Full support, auto-updates |
+| Claude Code | Manual (`.claude/skills/` or `~/.claude/skills/`) | Full support |
+| Codex CLI | `$skill-installer` or manual (`.agents/skills/`) | Core workflow works. `azure-work` skill-chaining steps (`superpowers:brainstorming`, etc.) are skipped gracefully. |
 | Antigravity / Others | Platform's skill directory | Same as Codex — core works, Claude-specific skill references ignored. |
 
 **Configuration on non-Claude platforms:** Set `ADO_ORG`, `ADO_PROJECT`, and `ADO_BACKLOG_URL` as environment variables through your platform's mechanism instead of `.claude/settings.local.json`.

@@ -29,6 +29,12 @@ Claude will use this skill when you say things like:
 /pr-complete
 ```
 
+When installed as a plugin, use the namespaced command:
+
+```
+/agentskills:pr-complete
+```
+
 No arguments needed. The skill auto-detects everything from your git repository.
 
 ## Workflow

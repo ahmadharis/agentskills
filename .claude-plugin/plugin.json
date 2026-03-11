@@ -1,0 +1,13 @@
+{
+  "name": "agentskills",
+  "version": "1.0.0",
+  "description": "Azure DevOps skills for AI coding agents — work items, pull requests, and post-merge cleanup",
+  "author": {
+    "name": "Haris Ahmad",
+    "url": "https://github.com/ahmadharis"
+  },
+  "homepage": "https://github.com/ahmadharis/agentskills",
+  "repository": "https://github.com/ahmadharis/agentskills",
+  "license": "MIT",
+  "keywords": ["azure-devops", "pull-requests", "work-items", "devops"]
+}

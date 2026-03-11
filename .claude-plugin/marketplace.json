@@ -1,0 +1,20 @@
+{
+  "name": "ahmadharis-agentskills",
+  "owner": {
+    "name": "Haris Ahmad",
+    "url": "https://github.com/ahmadharis"
+  },
+  "metadata": {
+    "description": "Azure DevOps skills for AI coding agents"
+  },
+  "plugins": [
+    {
+      "name": "agentskills",
+      "source": ".",
+      "description": "Azure DevOps skills — work items, pull requests, and post-merge cleanup",
+      "version": "1.0.0",
+      "license": "MIT",
+      "keywords": ["azure-devops", "pull-requests", "work-items"]
+    }
+  ]
+}
