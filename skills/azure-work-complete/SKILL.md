@@ -37,7 +37,7 @@ SELECT TOP 5 [System.Id], [System.Title], ...
 
 Then pick the first item from the reduced list.
 
-**If no items are returned:** Stop the cycle and report: "No open work items found. Cycle complete." If running in a loop, the next iteration will check again.
+**If no items are returned:** Stop the cycle and report: "No open work items found. Cycle complete." If running in a loop, cancel the scheduled task — use `CronList` to find the task ID, then `CronDelete` to remove it. Report: "All work items complete. Loop cancelled."
 
 ---
 
