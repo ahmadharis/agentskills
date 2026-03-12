@@ -10,7 +10,7 @@
   "plugins": [
     {
       "name": "agentskills",
-      "source": ".",
+      "source": "./",
       "description": "Azure DevOps skills — work items, pull requests, and post-merge cleanup",
       "version": "1.0.0",
       "license": "MIT",
