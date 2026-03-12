@@ -52,18 +52,32 @@ Add the `env` key to your project's `.claude/settings.local.json`:
 | `ADO_BACKLOG_URL` | Yes | — | Full Azure DevOps backlog URL |
 | `ADO_ORG` | Yes | Auto-extracted from URL | Azure DevOps organization name |
 | `ADO_PROJECT` | Yes | Auto-extracted from URL | Azure DevOps project name |
+| `ADO_TEAM` | No | Auto-extracted from URL (if present) | Azure DevOps team name — scopes queries to team's area paths |
 | `ADO_WORK_ITEM_FILTER` | No | *(none)* | Tag to filter work items by |
 
 ### Example Configurations
 
-**Minimal (all open items):**
+**Minimal (all open items, project-wide):**
+
+```json
+{
+  "env": {
+    "ADO_BACKLOG_URL": "https://dev.azure.com/myorg/myproject/_backlogs/backlog/Backlog%20items",
+    "ADO_ORG": "myorg",
+    "ADO_PROJECT": "myproject"
+  }
+}
+```
+
+**With team scope (only items from the team's area paths):**
 
 ```json
 {
   "env": {
     "ADO_BACKLOG_URL": "https://dev.azure.com/myorg/myproject/_backlogs/backlog/myteam/Backlog%20items",
     "ADO_ORG": "myorg",
-    "ADO_PROJECT": "myproject"
+    "ADO_PROJECT": "myproject",
+    "ADO_TEAM": "myteam"
   }
 }
 ```
@@ -76,12 +90,17 @@ Add the `env` key to your project's `.claude/settings.local.json`:
     "ADO_BACKLOG_URL": "https://dev.azure.com/myorg/myproject/_backlogs/backlog/myteam/Backlog%20items",
     "ADO_ORG": "myorg",
     "ADO_PROJECT": "myproject",
+    "ADO_TEAM": "myteam",
     "ADO_WORK_ITEM_FILTER": "claude"
   }
 }
 ```
 
-When `ADO_WORK_ITEM_FILTER` is set, only work items containing that tag are shown in browse mode. Direct mode (`/azure-work 12345`) always fetches the specified item regardless of tags.
+When `ADO_TEAM` is set, queries are scoped to the team's configured area paths. When unset, all project work items are returned. `ADO_TEAM` is auto-extracted from the backlog URL during first-run setup if the URL contains a team segment.
+
+When `ADO_WORK_ITEM_FILTER` is set, only work items containing that tag are shown in browse mode. Both filters can be combined.
+
+Direct mode (`/azure-work 12345`) always fetches the specified item regardless of team scope or tags.
 
 ## Usage
 

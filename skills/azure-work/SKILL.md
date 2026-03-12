@@ -56,7 +56,7 @@ If not authenticated, run `az login --allow-no-subscriptions` which opens the br
 
 ### 2. Check for Configuration
 
-Check if the `ADO_BACKLOG_URL` environment variable is set. If it IS set, `ADO_ORG` and `ADO_PROJECT` should also be available — skip to the Workflow section.
+Check if the `ADO_BACKLOG_URL` environment variable is set. If it IS set, `ADO_ORG` and `ADO_PROJECT` should also be available (and `ADO_TEAM` if the URL contained a team) — skip to the Workflow section.
 
 If `ADO_BACKLOG_URL` is NOT set, prompt the user:
 
@@ -68,19 +68,34 @@ If `ADO_BACKLOG_URL` is NOT set, prompt the user:
 - Without team: `https://dev.azure.com/org/project/_backlogs/backlog/Backlog%20items`
 - Board URL also accepted: `https://dev.azure.com/org/project/_boards/board/t/team/Backlog%20items`
 
-### 3. Extract Org and Project from URL
+### 3. Extract Org, Project, and Team from URL
 
 Works with both backlogs and boards URLs:
 
 ```
-https://dev.azure.com/{org}/{project}/_backlogs/...
-https://dev.azure.com/{org}/{project}/_boards/...
+https://dev.azure.com/{org}/{project}/_backlogs/backlog/{team}/Backlog%20items
+https://dev.azure.com/{org}/{project}/_backlogs/backlog/Backlog%20items
+https://dev.azure.com/{org}/{project}/_boards/board/t/{team}/Backlog%20items
 ```
 
 ```bash
 ORG=$(echo "$URL" | sed -n 's|.*dev.azure.com/\([^/]*\)/.*|\1|p')
 PROJECT=$(echo "$URL" | sed -n 's|.*dev.azure.com/[^/]*/\([^/]*\)/.*|\1|p')
 ```
+
+**Extract team (if present).** The team is the segment after `_backlogs/backlog/` that is NOT a backlog level name. Backlog level names include: `Backlog%20items`, `Stories`, `Features`, `Epics`, `Bugs`. If the segment after `_backlogs/backlog/` is none of those, it is a team name. For board URLs, the team is the segment after `_boards/board/t/`.
+
+```bash
+# For backlog URLs: segment after _backlogs/backlog/ that isn't a backlog level
+TEAM=$(echo "$URL" | sed -n 's|.*_backlogs/backlog/\([^/]*\)/.*|\1|p' | python3 -c "import sys,urllib.parse; t=urllib.parse.unquote(sys.stdin.read().strip()); print(t if t and t not in ['Backlog items','Stories','Features','Epics','Bugs'] else '')")
+
+# For board URLs: segment after _boards/board/t/
+if [ -z "$TEAM" ]; then
+  TEAM=$(echo "$URL" | sed -n 's|.*_boards/board/t/\([^/]*\)/.*|\1|p' | python3 -c "import sys,urllib.parse; print(urllib.parse.unquote(sys.stdin.read().strip()))")
+fi
+```
+
+If `TEAM` is empty, that's fine — the skill runs project-wide. If `TEAM` has a value, save it as `ADO_TEAM`.
 
 ### 4. Store Configuration
 
@@ -91,10 +106,13 @@ Read the existing `.claude/settings.local.json` file (or start with `{}`), and a
   "env": {
     "ADO_BACKLOG_URL": "https://dev.azure.com/org/project/_backlogs/backlog/team/Backlog%20items",
     "ADO_ORG": "org",
-    "ADO_PROJECT": "project"
+    "ADO_PROJECT": "project",
+    "ADO_TEAM": "team"
   }
 }
 ```
+
+Only include `ADO_TEAM` if a team was extracted from the URL. Omit it entirely when no team is present — the skill will query project-wide.
 
 Tell the user: "Configuration saved to `.claude/settings.local.json`. These values will be loaded automatically on future runs. Please restart Claude Code for the environment variables to take effect."
 
@@ -107,10 +125,13 @@ Tell the user: "Configuration saved to `.claude/settings.local.json`. These valu
 | `ADO_BACKLOG_URL` | Yes (prompted on first run) | — | Full Azure DevOps backlog URL |
 | `ADO_ORG` | Auto-extracted | from URL | Azure DevOps organization name |
 | `ADO_PROJECT` | Auto-extracted | from URL | Azure DevOps project name |
+| `ADO_TEAM` | Auto-extracted | from URL (if team is in URL) | Azure DevOps team name (omitted for project-wide queries) |
 | `ADO_WORK_ITEM_FILTER` | No | *(none — lists all)* | Tag to filter work items by (e.g. `"claude"`) |
 
-- When `ADO_WORK_ITEM_FILTER` is unset → lists ALL open work items
-- When set → adds `AND [System.Tags] CONTAINS '<value>'` to the WIQL query
+- When `ADO_TEAM` is set → fetches the team's area paths and scopes the WIQL query (see Step 2)
+- When `ADO_TEAM` is unset → queries project-wide (all teams)
+- When `ADO_WORK_ITEM_FILTER` is unset → lists ALL open work items (within team scope if set)
+- When `ADO_WORK_ITEM_FILTER` is set → adds `AND [System.Tags] CONTAINS '<value>'` to the WIQL query
 - Configuration is always per-project via `.claude/settings.local.json`
 
 ---
@@ -120,6 +141,12 @@ Tell the user: "Configuration saved to `.claude/settings.local.json`. These valu
 ### Step 1: Verify Configuration
 
 Check that `ADO_ORG` and `ADO_PROJECT` environment variables are set. If missing, run Setup.
+
+**Auto-populate `ADO_TEAM` (one-time migration):** If `ADO_BACKLOG_URL` is set but `ADO_TEAM` is NOT set as an environment variable at all, extract the team from the URL using the logic from Setup Step 3. Save the result to `.claude/settings.local.json` (read-modify-write to preserve existing settings):
+- If a team is found: save `"ADO_TEAM": "teamname"` and inform the user: "Detected team '{team}' from your backlog URL. Saved to configuration."
+- If no team is in the URL: save `"ADO_TEAM": ""` so this check does not run again.
+
+Use the extracted team value (if any) for the rest of this session even before restart.
 
 Verify authentication:
 
@@ -133,16 +160,61 @@ az account show
 
 Query open work items using WIQL.
 
-**Default query (no filter):**
+#### 2a. Build area path filter (if `ADO_TEAM` is set)
+
+If `ADO_TEAM` is set, fetch the team's configured area paths:
+
+```bash
+az boards area team list --team "$ADO_TEAM" --project "$ADO_PROJECT" --org "https://dev.azure.com/$ADO_ORG" -o json
+```
+
+This returns an array of area path objects, each with:
+- `value` — the area path string (e.g., `"MyProject\\TeamArea"`)
+- `includeChildren` — boolean indicating whether child area paths are included
+
+Build an area path WHERE clause from the result:
+- If `includeChildren` is `true`: use `[System.AreaPath] UNDER 'value'`
+- If `includeChildren` is `false`: use `[System.AreaPath] = 'value'`
+- Combine multiple entries with `OR`, wrapped in parentheses
+
+**Example:** If the team has two area paths:
+```json
+[
+  {"value": "MyProject\\Web", "includeChildren": true},
+  {"value": "MyProject\\Shared", "includeChildren": false}
+]
+```
+
+The clause becomes:
+```
+AND ([System.AreaPath] UNDER 'MyProject\Web' OR [System.AreaPath] = 'MyProject\Shared')
+```
+
+If `ADO_TEAM` is NOT set, skip this — no area path clause is added.
+
+#### 2b. Execute the WIQL query
+
+Construct the query by combining the base conditions with optional area path and tag filters:
+
+**Base query (no team, no filter):**
 
 ```bash
 az boards query --wiql "SELECT [System.Id], [System.Title], [System.State], [System.WorkItemType] FROM WorkItems WHERE [System.State] <> 'Done' AND [System.State] <> 'Closed' AND [System.State] <> 'Removed' ORDER BY [Microsoft.VSTS.Common.Priority] ASC, [System.Id] ASC" --org "https://dev.azure.com/$ADO_ORG" --project "$ADO_PROJECT"
 ```
 
-**With tag filter (when `ADO_WORK_ITEM_FILTER` is set):**
+**With team scope:** append the area path clause from Step 2a before `ORDER BY`.
 
-```bash
-az boards query --wiql "SELECT [System.Id], [System.Title], [System.State], [System.WorkItemType] FROM WorkItems WHERE [System.Tags] CONTAINS '$ADO_WORK_ITEM_FILTER' AND [System.State] <> 'Done' AND [System.State] <> 'Closed' AND [System.State] <> 'Removed' ORDER BY [Microsoft.VSTS.Common.Priority] ASC, [System.Id] ASC" --org "https://dev.azure.com/$ADO_ORG" --project "$ADO_PROJECT"
+**With tag filter (when `ADO_WORK_ITEM_FILTER` is set):** append `AND [System.Tags] CONTAINS '$ADO_WORK_ITEM_FILTER'` before `ORDER BY`.
+
+**Both filters can be combined.** Build the WHERE clause additively:
+
+```
+WHERE [System.State] <> 'Done'
+  AND [System.State] <> 'Closed'
+  AND [System.State] <> 'Removed'
+  AND (<area path clause>)           -- only if ADO_TEAM is set
+  AND [System.Tags] CONTAINS '...'   -- only if ADO_WORK_ITEM_FILTER is set
+ORDER BY [Microsoft.VSTS.Common.Priority] ASC, [System.Id] ASC
 ```
 
 Display results as a table:

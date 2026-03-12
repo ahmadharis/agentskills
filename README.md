@@ -155,6 +155,7 @@ Add the `env` key to your project's `.claude/settings.local.json`:
 | `ADO_BACKLOG_URL` | azure-work | Yes | — | Full Azure DevOps backlog URL |
 | `ADO_ORG` | azure-work | Yes | Auto-extracted | Azure DevOps organization |
 | `ADO_PROJECT` | azure-work | Yes | Auto-extracted | Azure DevOps project |
+| `ADO_TEAM` | azure-work | No | Auto-extracted (if in URL) | Azure DevOps team — scopes queries to team's area paths |
 | `ADO_WORK_ITEM_FILTER` | azure-work | No | *(none)* | Tag to filter work items |
 
 `azure-pr` and `pr-complete` do not require environment variables — they extract what they need from the git remote URL.
