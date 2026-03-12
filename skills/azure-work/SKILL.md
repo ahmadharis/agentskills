@@ -239,7 +239,7 @@ Skip listing, go straight to Step 3 with the provided ID.
 Fetch the full work item with all fields and relations:
 
 ```bash
-az boards work-item show --id $WORK_ITEM_ID --org "https://dev.azure.com/$ADO_ORG" --project "$ADO_PROJECT" --expand all
+az boards work-item show --id $WORK_ITEM_ID --org "https://dev.azure.com/$ADO_ORG" --expand all
 ```
 
 Extract and present to the user:
@@ -302,10 +302,10 @@ The valid "in progress" state depends on the work item type:
 
 ```bash
 # For Product Backlog Items and Bugs:
-az boards work-item update --id $WORK_ITEM_ID --state "Approved" --org "https://dev.azure.com/$ADO_ORG" --project "$ADO_PROJECT"
+az boards work-item update --id $WORK_ITEM_ID --state "Approved" --org "https://dev.azure.com/$ADO_ORG"
 
 # For Tasks:
-az boards work-item update --id $WORK_ITEM_ID --state "In Progress" --org "https://dev.azure.com/$ADO_ORG" --project "$ADO_PROJECT"
+az boards work-item update --id $WORK_ITEM_ID --state "In Progress" --org "https://dev.azure.com/$ADO_ORG"
 ```
 
 Skip this step if the work item is already in the target state.
