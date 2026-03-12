@@ -29,11 +29,13 @@ Invoke the `azure-work` skill in **browse mode** (no arguments).
 
 The skill will list open work items. **Automatically pick the first item from the list** — do not prompt the user for selection.
 
-**If the list is too large:** If `azure-work` indicates there are too many items to display, or returns an error about result limits, or the list appears truncated, re-run the WIQL query from `azure-work` with `TOP 5` added after `SELECT`:
+**If the list is too large:** If `azure-work` indicates there are too many items to display, or returns an error about result limits, or the list appears truncated, re-run the WIQL query from `azure-work` and pipe the output through `jq` to take only the first 5 results:
 
+```bash
+az boards query --wiql "SELECT [System.Id], [System.Title], [System.State], [System.WorkItemType] FROM WorkItems WHERE ..." --org "https://dev.azure.com/$ADO_ORG" --project "$ADO_PROJECT" -o json | jq '.[:5]'
 ```
-SELECT TOP 5 [System.Id], [System.Title], ...
-```
+
+WIQL does not support `TOP N` or `LIMIT`. Result limiting must be done client-side.
 
 Then pick the first item from the reduced list.
 
