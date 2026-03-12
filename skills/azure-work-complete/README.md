@@ -9,7 +9,7 @@ Orchestrates the complete development workflow by chaining four skills in sequen
 1. **azure-work** — browse open work items, auto-pick the first one, implement it
 2. **/simplify** (or inline review) — assess and review code quality, reuse, and efficiency
 3. **azure-pr** — commit, push, and create a PR with work item linking
-4. **pr-complete** — post-merge branch cleanup (only if PR auto-completes)
+4. **pr-complete** — return to default branch and clean up
 
 ## Prerequisites
 
@@ -90,9 +90,9 @@ On **Codex / other platforms**, an inline review pass covers the same three dime
       ↓
 3. /azure-pr --work-items <id> → push and create PR
       ↓
-4. /pr-complete → cleanup (only if PR auto-merged)
+4. /pr-complete → return to default branch, clean up
       ↓
-   Cycle complete — report summary
+   Cycle complete — ready for next item
 ```
 
 ## Compatibility

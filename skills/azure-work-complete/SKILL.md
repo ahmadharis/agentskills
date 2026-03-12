@@ -103,11 +103,11 @@ Wait for the PR to be created. Note the PR URL from the output.
 
 ---
 
-## Step 5: Post-Merge Cleanup
+## Step 5: Return to Default Branch
 
-> **Important:** This step only applies if the PR was auto-completed (merged automatically). If the PR requires manual review/approval, stop here and report the PR URL to the user. The user can run `/pr-complete` manually after the PR is merged.
+**Always run this step** — regardless of whether the PR was merged or is awaiting review. The branch has been pushed and the PR created, so the local feature branch is no longer needed. Returning to the default branch is required to be ready for the next work item (especially in loop mode).
 
-If the PR was merged immediately (e.g., auto-complete policies), invoke:
+Invoke:
 
 ```
 /pr-complete
@@ -126,7 +126,8 @@ Cycle complete:
 - Work item: #<ID> — <Title>
 - Branch: feature/<ID>
 - PR: <URL>
-- Status: <awaiting review | merged and cleaned up>
+- PR status: awaiting review
+- Local: back on default branch, ready for next item
 ```
 
 If running in a `/loop`, the next iteration will begin at the scheduled time and pick up the next available work item.
