@@ -197,10 +197,14 @@ When installed as a plugin, use the namespaced command:
         ↓
 2. Gather details (type, title, description, optional fields)
         ↓
-3. az boards work-item create
+3. Resolve area path (team default when ADO_TEAM is set)
         ↓
-4. Display created item with link
+4. az boards work-item create (with --area for team scoping)
+        ↓
+5. Display created item with link
 ```
+
+When `ADO_TEAM` is set, the skill automatically assigns the team's default area path so the item appears on the correct team board. When `ADO_TEAM` is not set, items land at the project root.
 
 ### Update
 

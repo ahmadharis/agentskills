@@ -397,9 +397,52 @@ Optional fields the user may provide:
 
 If the user provides a natural language request like "create a bug for the login timeout issue", extract the type and title from the request. Only prompt for fields that aren't clear from context.
 
-### Step C2: Create the Work Item
+### Step C2: Resolve Area Path
+
+**This step is mandatory when `ADO_TEAM` is set** and the user has NOT explicitly provided an area path. Without it, the work item lands at the project root and won't appear on the team's board.
+
+**When `ADO_TEAM` is set:**
+
+Fetch the team's area paths and extract the default:
 
 ```bash
+AREA_JSON=$(az boards area team list \
+  --team "$ADO_TEAM" \
+  --project "$ADO_PROJECT" \
+  --org "https://dev.azure.com/$ADO_ORG" \
+  -o json)
+
+# Extract the default area path (isDefault: true), fall back to first entry
+AREA_PATH=$(echo "$AREA_JSON" | python3 -c "
+import sys, json
+entries = json.load(sys.stdin)
+default = next((e for e in entries if e.get('isDefault')), entries[0] if entries else None)
+print(default['value'] if default else '')
+")
+```
+
+If `AREA_PATH` is non-empty, add `--area "$AREA_PATH"` to the create command in Step C3.
+
+**When `ADO_TEAM` is NOT set:**
+
+Skip this step. The work item will be assigned the project root area path, which is correct for project-wide configurations.
+
+### Step C3: Create the Work Item
+
+Build the create command. Always include `--area` when it was resolved in Step C2:
+
+```bash
+# With team area path:
+az boards work-item create \
+  --type "$TYPE" \
+  --title "$TITLE" \
+  --description "$DESCRIPTION" \
+  --area "$AREA_PATH" \
+  --project "$ADO_PROJECT" \
+  --org "https://dev.azure.com/$ADO_ORG" \
+  -o json
+
+# Without team (project-wide, no --area):
 az boards work-item create \
   --type "$TYPE" \
   --title "$TITLE" \
@@ -412,20 +455,21 @@ az boards work-item create \
 Add optional fields if provided:
 
 ```bash
-# With priority and tags:
+# With priority, tags, and team area path:
 az boards work-item create \
   --type "$TYPE" \
   --title "$TITLE" \
   --description "$DESCRIPTION" \
+  --area "$AREA_PATH" \
   --project "$ADO_PROJECT" \
   --org "https://dev.azure.com/$ADO_ORG" \
   --fields "Microsoft.VSTS.Common.Priority=$PRIORITY" "System.Tags=$TAGS" \
   -o json
 ```
 
-If `ADO_TEAM` is set and the team has a default area path, consider setting `--area` to the team's primary area path (first entry from `az boards area team list`). This ensures the item appears on the team's board. Skip if the user explicitly provides an area path.
+**Override rule:** If the user explicitly provides an area path, use that instead of the team default.
 
-### Step C3: Display Result
+### Step C4: Display Result
 
 Extract and display from the response:
 
@@ -433,6 +477,7 @@ Extract and display from the response:
 Created work item #<id>: <title>
   Type: <type>
   State: <state>
+  Area Path: <area path>
   URL: https://dev.azure.com/<org>/<project>/_workitems/edit/<id>
 ```
 
