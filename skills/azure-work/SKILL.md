@@ -3,13 +3,17 @@ name: azure-work
 description: >
   Use when starting work from Azure DevOps board items, picking up backlog items,
   or when given a specific work item number to implement.
-  Also use when the user says "pick up a work item", "what's on the board",
-  or "work on item 12345".
+  Also use when the user wants to create a new work item, update a work item's
+  fields (title, description, state, priority, tags), or mark a work item as
+  done/complete/resolved.
+  Triggers on: "pick up a work item", "what's on the board", "work on item 12345",
+  "create a work item", "mark item 12345 as done", "update work item 12345",
+  "close work item 12345".
 ---
 
 # Azure DevOps Work Item Workflow
 
-Pick up and implement Azure DevOps work items. Browse open items or work directly on a specific item by number.
+Browse, pick up, implement, create, and update Azure DevOps work items.
 
 ## Invocation
 
@@ -17,6 +21,8 @@ Pick up and implement Azure DevOps work items. Browse open items or work directl
 |------|---------|----------|
 | Browse | `/azure-work` | List open work items, user picks one |
 | Direct | `/azure-work <number>` | Go straight to that work item |
+| Create | `/azure-work create` | Create a new work item |
+| Update | `/azure-work update <number>` | Update an existing work item's fields |
 
 ---
 
@@ -153,6 +159,18 @@ Verify authentication:
 ```bash
 az account show
 ```
+
+### Mode Routing
+
+After verifying configuration, follow the path matching the invocation mode:
+
+| Mode | Go to |
+|------|-------|
+| Browse / Direct | Step 2 (below) |
+| Create | [Create Work Item](#create-work-item) section |
+| Update | [Update Work Item](#update-work-item) section |
+
+---
 
 ### Step 2: List or Fetch Work Items
 
@@ -352,10 +370,172 @@ After implementation is complete:
 
 ---
 
+## Create Work Item
+
+Use this mode when the user wants to create a new work item on the Azure DevOps board.
+
+### Step C1: Gather Details
+
+Determine the work item details from the user's request or by prompting. At minimum, you need:
+
+| Field | Required | How to get |
+|-------|----------|------------|
+| Type | Yes | Ask the user. Common types: `User Story`, `Bug`, `Task`, `Product Backlog Item`, `Feature`, `Epic` |
+| Title | Yes | From user's request or ask |
+| Description | No | From user's request or ask. Can be plain text (will be sent as-is). |
+
+Optional fields the user may provide:
+
+| Field | CLI flag | Example |
+|-------|----------|---------|
+| Priority | `--fields "Microsoft.VSTS.Common.Priority=1"` | 1 (Critical) to 4 (Low) |
+| Tags | `--fields "System.Tags=tag1; tag2"` | Semicolon-separated |
+| Assigned To | `--fields "System.AssignedTo=user@example.com"` | Email or display name |
+| Area Path | `--area` | `MyProject\TeamArea` |
+| Iteration Path | `--iteration` | `MyProject\Sprint 1` |
+| Acceptance Criteria | `--fields "Microsoft.VSTS.Common.AcceptanceCriteria=<criteria>"` | HTML or plain text |
+
+If the user provides a natural language request like "create a bug for the login timeout issue", extract the type and title from the request. Only prompt for fields that aren't clear from context.
+
+### Step C2: Create the Work Item
+
+```bash
+az boards work-item create \
+  --type "$TYPE" \
+  --title "$TITLE" \
+  --description "$DESCRIPTION" \
+  --project "$ADO_PROJECT" \
+  --org "https://dev.azure.com/$ADO_ORG" \
+  -o json
+```
+
+Add optional fields if provided:
+
+```bash
+# With priority and tags:
+az boards work-item create \
+  --type "$TYPE" \
+  --title "$TITLE" \
+  --description "$DESCRIPTION" \
+  --project "$ADO_PROJECT" \
+  --org "https://dev.azure.com/$ADO_ORG" \
+  --fields "Microsoft.VSTS.Common.Priority=$PRIORITY" "System.Tags=$TAGS" \
+  -o json
+```
+
+If `ADO_TEAM` is set and the team has a default area path, consider setting `--area` to the team's primary area path (first entry from `az boards area team list`). This ensures the item appears on the team's board. Skip if the user explicitly provides an area path.
+
+### Step C3: Display Result
+
+Extract and display from the response:
+
+```
+Created work item #<id>: <title>
+  Type: <type>
+  State: <state>
+  URL: https://dev.azure.com/<org>/<project>/_workitems/edit/<id>
+```
+
+The URL follows the pattern `https://dev.azure.com/$ADO_ORG/$ADO_PROJECT/_workitems/edit/$ID`.
+
+---
+
+## Update Work Item
+
+Use this mode when the user wants to modify an existing work item's fields -- change state, title, description, priority, tags, or any other field.
+
+### Step U1: Determine What to Update
+
+The user's request tells you which work item and which fields to change. Examples:
+
+| User says | Work item ID | Fields to update |
+|-----------|-------------|-----------------|
+| "mark 12345 as done" | 12345 | State → Done |
+| "close work item 12345" | 12345 | State → Closed |
+| "update 12345 title to 'New title'" | 12345 | Title → New title |
+| "set priority of 12345 to 1" | 12345 | Priority → 1 |
+| "add tag 'urgent' to 12345" | 12345 | Tags → append "urgent" |
+| "assign 12345 to user@example.com" | 12345 | Assigned To → user@example.com |
+
+If the user doesn't specify a work item ID, ask for it.
+
+**State transitions reference:**
+
+| Target | Valid state values |
+|--------|-------------------|
+| In progress | `Active`, `Approved`, `In Progress` (depends on type, see Step 6) |
+| Done | `Done` |
+| Resolved | `Resolved` |
+| Closed | `Closed` |
+| Removed | `Removed` |
+| Back to new | `New` |
+
+When the user says "done", "complete", "finished", or "close" — use `Done` for Product Backlog Items, Bugs, and User Stories. Use `Closed` for Tasks and Issues.
+
+### Step U2: Build and Execute the Update
+
+The `az boards work-item update` command accepts these flags directly:
+
+```bash
+az boards work-item update \
+  --id $WORK_ITEM_ID \
+  --org "https://dev.azure.com/$ADO_ORG" \
+  -o json
+```
+
+Add flags based on what the user wants to change:
+
+| Change | Flag |
+|--------|------|
+| State | `--state "$NEW_STATE"` |
+| Title | `--title "$NEW_TITLE"` |
+| Description | `--description "$NEW_DESCRIPTION"` |
+| Other fields | `--fields "Field.Name=value"` |
+
+**Multiple fields can be updated in a single call:**
+
+```bash
+# Update state and add a comment:
+az boards work-item update \
+  --id $WORK_ITEM_ID \
+  --state "Done" \
+  --discussion "Completed as part of PR #123" \
+  --org "https://dev.azure.com/$ADO_ORG" \
+  -o json
+
+# Update priority and tags:
+az boards work-item update \
+  --id $WORK_ITEM_ID \
+  --fields "Microsoft.VSTS.Common.Priority=1" "System.Tags=urgent; production" \
+  --org "https://dev.azure.com/$ADO_ORG" \
+  -o json
+```
+
+**For appending tags** (not replacing), first fetch the current tags:
+
+```bash
+CURRENT_TAGS=$(az boards work-item show --id $WORK_ITEM_ID --org "https://dev.azure.com/$ADO_ORG" -o json | jq -r '.fields["System.Tags"] // ""')
+NEW_TAGS="$CURRENT_TAGS; $TAG_TO_ADD"
+az boards work-item update --id $WORK_ITEM_ID --fields "System.Tags=$NEW_TAGS" --org "https://dev.azure.com/$ADO_ORG" -o json
+```
+
+### Step U3: Display Result
+
+Show the updated fields:
+
+```
+Updated work item #<id>: <title>
+  <field>: <old value> → <new value>
+  URL: https://dev.azure.com/<org>/<project>/_workitems/edit/<id>
+```
+
+---
+
 ## Notes
 
 - The `azure-pr` skill handles PR creation and can link the work item via `--work-items`
 - The `pr-complete` skill handles post-merge cleanup
-- Work item state progression: **New → Active** (this skill) → **Resolved/Done** (PR closure)
+- Work item state progression: **New → Active** (this skill) → **Resolved/Done** (PR closure or update mode)
 - If the user replies with just a number after the listing, treat it as the work item ID to pick up
 - Configuration persists across sessions — setup only runs once per project
+- Create mode requires `--project`; update mode does not (org-scoped by ID)

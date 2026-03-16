@@ -1,6 +1,6 @@
 # azure-work
 
-Azure DevOps work item skill for Claude Code. Browse, pick up, and implement work items directly from your Azure DevOps board.
+Azure DevOps work item skill for Claude Code. Browse, pick up, implement, create, and update work items directly from your Azure DevOps board.
 
 ## What It Does
 
@@ -12,6 +12,8 @@ Connects Claude Code to your Azure DevOps backlog so you can:
 4. **Create** a feature branch and update the work item state
 5. **Implement** the work using Claude's coding skills
 6. **Hand off** to `azure-pr` for PR creation
+7. **Create** new work items (bugs, stories, tasks) on the board
+8. **Update** existing work items -- change state, title, description, priority, tags, or any field
 
 ## Prerequisites
 
@@ -120,6 +122,35 @@ Lists all open work items (or filtered by tag if `ADO_WORK_ITEM_FILTER` is set).
 
 Jumps directly to work item 12345 — no listing step.
 
+### Create Mode
+
+```
+/azure-work create
+```
+
+Creates a new work item. The skill will ask for the type and title, or you can provide them naturally:
+
+```
+"Create a bug for the login timeout issue"
+"Create a user story: Add export to CSV feature"
+```
+
+### Update Mode
+
+```
+/azure-work update 12345
+```
+
+Updates fields on an existing work item. You can describe the change naturally:
+
+```
+"Mark work item 12345 as done"
+"Update 12345 title to 'Revised login flow'"
+"Set priority of 12345 to 1"
+"Add tag 'urgent' to 12345"
+"Assign 12345 to user@example.com"
+```
+
 ### Plugin (Namespaced) Commands
 
 When installed as a plugin, use the namespaced command:
@@ -127,9 +158,13 @@ When installed as a plugin, use the namespaced command:
 ```
 /agentskills:azure-work
 /agentskills:azure-work 12345
+/agentskills:azure-work create
+/agentskills:azure-work update 12345
 ```
 
 ## Full Workflow
+
+### Browse / Direct (implement)
 
 ```
 1. Check prerequisites (az CLI, authentication)
@@ -153,6 +188,30 @@ When installed as a plugin, use the namespaced command:
 10. Run verification checks
         ↓
 11. Report results, suggest: /azure-pr --work-items <id>
+```
+
+### Create
+
+```
+1. Check prerequisites and configuration
+        ↓
+2. Gather details (type, title, description, optional fields)
+        ↓
+3. az boards work-item create
+        ↓
+4. Display created item with link
+```
+
+### Update
+
+```
+1. Check prerequisites and configuration
+        ↓
+2. Determine work item ID and fields to change
+        ↓
+3. az boards work-item update
+        ↓
+4. Display updated fields with before/after
 ```
 
 ## Work Item Field Extraction
@@ -182,13 +241,15 @@ The skill downloads and reads all attachments before starting implementation:
 
 ## State Transitions
 
+**During implementation (browse/direct mode):**
+
 | Work Item Type | State Set By This Skill |
 |----------------|------------------------|
 | Product Backlog Item | `Approved` |
 | Bug | `Approved` |
 | Task | `In Progress` |
 
-The work item is NOT marked as Done/Resolved by this skill. That happens when the PR is closed.
+**Via update mode**, any valid state transition can be made: New, Active, Approved, In Progress, Done, Resolved, Closed, Removed.
 
 ## Integration with Other Skills
 
@@ -215,3 +276,6 @@ Built for **Claude Code** but uses the [Agent Skills](https://agentskills.io) op
 - Authentication uses Azure AD OAuth via `az login` — no PAT tokens needed
 - The WIQL query excludes Done, Closed, and Removed items
 - Direct mode works regardless of tag filters
+- Create mode requires `--project` in the CLI call; update mode is org-scoped by ID (no `--project`)
+- Update mode can change any field including state, title, description, priority, tags, and assigned to
+- When appending tags, the skill fetches current tags first to avoid overwriting
