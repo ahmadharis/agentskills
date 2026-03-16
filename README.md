@@ -11,9 +11,10 @@ These skills follow the [Agent Skills](https://agentskills.io) open standard and
 | [azure-work](skills/azure-work/) | `/azure-work` | Browse and implement Azure DevOps work items |
 | [azure-pr](skills/azure-pr/) | `/azure-pr` | Create pull requests in Azure DevOps |
 | [pr-complete](skills/pr-complete/) | `/pr-complete` | Post-merge branch cleanup |
+| [azure-pr-comments](skills/azure-pr-comments/) | `/azure-pr-comments` | List, add, reply to, and resolve PR comment threads |
 | [azure-work-complete](skills/azure-work-complete/) | `/azure-work-complete` | Full autonomous cycle: pick up → implement → review → PR → cleanup |
 
-> When installed as a plugin, skills are namespaced: `/agentskills:azure-work`, `/agentskills:azure-pr`, `/agentskills:pr-complete`. When installed manually, the short names above apply.
+> When installed as a plugin, skills are namespaced: `/agentskills:azure-work`, `/agentskills:azure-pr`, `/agentskills:azure-pr-comments`, `/agentskills:pr-complete`. When installed manually, the short names above apply.
 
 ## Workflow
 
@@ -25,6 +26,8 @@ The skills compose into a full development cycle — run each step manually, or 
 /simplify (or inline review) → code quality review
       ↓
 /agentskills:azure-pr --work-items <id> → push and create PR
+      ↓
+/agentskills:azure-pr-comments → manage review feedback
       ↓
 /agentskills:pr-complete → post-merge cleanup
 ```
@@ -73,7 +76,7 @@ Install as a plugin for auto-updates and one-command setup:
 /plugin install agentskills@ahmadharis-agentskills
 ```
 
-Skills become available as `/agentskills:azure-work`, `/agentskills:azure-pr`, `/agentskills:pr-complete`, and `/agentskills:azure-work-complete`.
+Skills become available as `/agentskills:azure-work`, `/agentskills:azure-pr`, `/agentskills:azure-pr-comments`, `/agentskills:pr-complete`, and `/agentskills:azure-work-complete`.
 
 The marketplace auto-update mechanism keeps skills current — no need to manually pull updates.
 
@@ -85,6 +88,7 @@ Install individual skills using the `$skill-installer`:
 $skill-installer install https://github.com/ahmadharis/agentskills/tree/main/skills/azure-work
 $skill-installer install https://github.com/ahmadharis/agentskills/tree/main/skills/azure-pr
 $skill-installer install https://github.com/ahmadharis/agentskills/tree/main/skills/pr-complete
+$skill-installer install https://github.com/ahmadharis/agentskills/tree/main/skills/azure-pr-comments
 $skill-installer install https://github.com/ahmadharis/agentskills/tree/main/skills/azure-work-complete
 ```
 
@@ -101,6 +105,7 @@ git clone https://github.com/ahmadharis/agentskills.git /tmp/agentskills
 cp -r /tmp/agentskills/skills/azure-pr .claude/skills/
 cp -r /tmp/agentskills/skills/azure-work .claude/skills/
 cp -r /tmp/agentskills/skills/pr-complete .claude/skills/
+cp -r /tmp/agentskills/skills/azure-pr-comments .claude/skills/
 cp -r /tmp/agentskills/skills/azure-work-complete .claude/skills/
 ```
 
@@ -111,6 +116,7 @@ git clone https://github.com/ahmadharis/agentskills.git $env:TEMP\agentskills
 Copy-Item -Recurse $env:TEMP\agentskills\skills\azure-pr .claude\skills\
 Copy-Item -Recurse $env:TEMP\agentskills\skills\azure-work .claude\skills\
 Copy-Item -Recurse $env:TEMP\agentskills\skills\pr-complete .claude\skills\
+Copy-Item -Recurse $env:TEMP\agentskills\skills\azure-pr-comments .claude\skills\
 Copy-Item -Recurse $env:TEMP\agentskills\skills\azure-work-complete .claude\skills\
 ```
 
@@ -168,7 +174,7 @@ Add the `env` key to your project's `.claude/settings.local.json`:
 | `ADO_TEAM` | azure-work | No | Auto-extracted (if in URL) | Azure DevOps team — scopes queries to team's area paths |
 | `ADO_WORK_ITEM_FILTER` | azure-work | No | *(none)* | Tag to filter work items |
 
-`azure-pr` and `pr-complete` do not require environment variables — they extract what they need from the git remote URL.
+`azure-pr`, `azure-pr-comments`, and `pr-complete` do not require environment variables — they extract what they need from the git remote URL.
 
 ### Advanced: Tag Filtering
 
@@ -204,8 +210,9 @@ These skills use the [Agent Skills](https://agentskills.io) open standard (`SKIL
 
 See each skill's own README for detailed documentation:
 
-- [azure-work](skills/azure-work/README.md) — work item browsing, implementation workflow, state management
+- [azure-work](skills/azure-work/README.md) — work item browsing, creation, update, and implementation workflow
 - [azure-pr](skills/azure-pr/README.md) — PR creation, branch naming, work item linking
+- [azure-pr-comments](skills/azure-pr-comments/README.md) — PR comment threads: list, add, reply, resolve, delete
 - [pr-complete](skills/pr-complete/README.md) — post-merge cleanup, branch deletion
 - [azure-work-complete](skills/azure-work-complete/README.md) — full autonomous cycle, /loop integration
 
