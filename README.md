@@ -8,7 +8,7 @@ These skills follow the [Agent Skills](https://agentskills.io) open standard and
 
 | Skill | Command | Description |
 |-------|---------|-------------|
-| [azure-work](skills/azure-work/) | `/azure-work` | Browse and implement Azure DevOps work items |
+| [azure-work](skills/azure-work/) | `/azure-work` | Browse, create, update, and implement Azure DevOps work items |
 | [azure-pr](skills/azure-pr/) | `/azure-pr` | Create pull requests in Azure DevOps |
 | [pr-complete](skills/pr-complete/) | `/pr-complete` | Post-merge branch cleanup |
 | [azure-pr-comments](skills/azure-pr-comments/) | `/azure-pr-comments` | List, add, reply to, and resolve PR comment threads |
@@ -129,6 +129,8 @@ git clone https://github.com/ahmadharis/agentskills.git /tmp/agentskills
 cp -r /tmp/agentskills/skills/azure-pr ~/.claude/skills/
 cp -r /tmp/agentskills/skills/azure-work ~/.claude/skills/
 cp -r /tmp/agentskills/skills/pr-complete ~/.claude/skills/
+cp -r /tmp/agentskills/skills/azure-pr-comments ~/.claude/skills/
+cp -r /tmp/agentskills/skills/azure-work-complete ~/.claude/skills/
 ```
 
 Windows (PowerShell):
@@ -138,6 +140,8 @@ git clone https://github.com/ahmadharis/agentskills.git $env:TEMP\agentskills
 Copy-Item -Recurse $env:TEMP\agentskills\skills\azure-pr $env:USERPROFILE\.claude\skills\
 Copy-Item -Recurse $env:TEMP\agentskills\skills\azure-work $env:USERPROFILE\.claude\skills\
 Copy-Item -Recurse $env:TEMP\agentskills\skills\pr-complete $env:USERPROFILE\.claude\skills\
+Copy-Item -Recurse $env:TEMP\agentskills\skills\azure-pr-comments $env:USERPROFILE\.claude\skills\
+Copy-Item -Recurse $env:TEMP\agentskills\skills\azure-work-complete $env:USERPROFILE\.claude\skills\
 ```
 
 After manual installation, restart Claude Code and verify the skills appear in the `/` menu.
