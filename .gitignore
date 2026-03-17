@@ -3,3 +3,9 @@ __pycache__/
 .idea/
 .vscode/
 .claude/
+.env
+.env.*
+*.pem
+*.key
+*.pat
+credentials.json

@@ -25,6 +25,8 @@ If the command fails, inform the user how to install it:
 - **Windows**: `winget install --exact --id Microsoft.AzureCLI`
 - **Linux**: `curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash`
 
+**Windows shell requirement:** All commands in this skill use bash syntax (`sed`, `grep`, etc.). On Windows, run in **Git Bash** or **WSL** — PowerShell and cmd are not supported.
+
 Then ensure the Azure DevOps extension is installed:
 
 ```bash

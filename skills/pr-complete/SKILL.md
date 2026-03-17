@@ -11,6 +11,8 @@ description: >
 
 Run these steps in order after a PR has been merged into the default branch.
 
+**Windows:** Requires **Git Bash** or **WSL** — commands use bash syntax (`sed`, `grep`, `awk`, `xargs`).
+
 ## Step 1: Detect the default branch
 
 ```bash

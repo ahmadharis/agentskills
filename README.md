@@ -41,6 +41,7 @@ For continuous autonomous mode: `/loop 30m /agentskills:azure-work-complete`
 - [Claude Code](https://claude.com/claude-code)
 - [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) (`az`) with the `azure-devops` extension
 - Git
+- **Windows**: A bash-compatible shell is required — use **Git Bash** (included with [Git for Windows](https://gitforwindows.org)) or **WSL**. PowerShell and cmd are not supported.
 
 ### Installing Azure CLI
 

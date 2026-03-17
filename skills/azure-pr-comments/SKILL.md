@@ -46,6 +46,8 @@ If the command fails, inform the user how to install it:
 - **Windows**: `winget install --exact --id Microsoft.AzureCLI`
 - **Linux**: `curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash`
 
+**Windows shell requirement:** All commands in this skill use bash syntax (`sed`, `mktemp`, `jq`, etc.). On Windows, run in **Git Bash** or **WSL** — PowerShell and cmd are not supported.
+
 Then ensure the Azure DevOps extension is installed:
 
 ```bash
@@ -190,18 +192,10 @@ Add a new comment thread to the PR. Determine from context whether this is a gen
 Write the JSON body to a temp file and invoke:
 
 ```bash
-cat > /tmp/ado-thread.json << 'ENDOFJSON'
-{
-  "comments": [
-    {
-      "parentCommentId": 0,
-      "content": "$COMMENT_TEXT",
-      "commentType": 1
-    }
-  ],
-  "status": 1
-}
-ENDOFJSON
+TMPFILE=$(mktemp "${TMPDIR:-/tmp}/ado-thread-XXXXXX.json")
+jq -n --arg content "$COMMENT_TEXT" \
+  '{comments: [{parentCommentId: 0, content: $content, commentType: 1}], status: 1}' \
+  > "$TMPFILE"
 
 az devops invoke \
   --org "https://dev.azure.com/$ORG" \
@@ -212,11 +206,11 @@ az devops invoke \
     repositoryId="$REPO_ID" \
     pullRequestId="$PR_ID" \
   --http-method POST \
-  --in-file /tmp/ado-thread.json \
+  --in-file "$TMPFILE" \
   --api-version 7.1 \
   -o json
 
-rm -f /tmp/ado-thread.json
+rm -f "$TMPFILE"
 ```
 
 #### Inline Comment (File-level)
@@ -224,29 +218,10 @@ rm -f /tmp/ado-thread.json
 When the user specifies a file and line number:
 
 ```bash
-cat > /tmp/ado-thread.json << 'ENDOFJSON'
-{
-  "comments": [
-    {
-      "parentCommentId": 0,
-      "content": "$COMMENT_TEXT",
-      "commentType": 1
-    }
-  ],
-  "status": 1,
-  "threadContext": {
-    "filePath": "/$FILE_PATH",
-    "rightFileStart": {
-      "line": $LINE_NUMBER,
-      "offset": 1
-    },
-    "rightFileEnd": {
-      "line": $LINE_NUMBER,
-      "offset": 1
-    }
-  }
-}
-ENDOFJSON
+TMPFILE=$(mktemp "${TMPDIR:-/tmp}/ado-thread-XXXXXX.json")
+jq -n --arg content "$COMMENT_TEXT" --arg path "/$FILE_PATH" --argjson line "$LINE_NUMBER" \
+  '{comments: [{parentCommentId: 0, content: $content, commentType: 1}], status: 1, threadContext: {filePath: $path, rightFileStart: {line: $line, offset: 1}, rightFileEnd: {line: $line, offset: 1}}}' \
+  > "$TMPFILE"
 
 az devops invoke \
   --org "https://dev.azure.com/$ORG" \
@@ -257,11 +232,11 @@ az devops invoke \
     repositoryId="$REPO_ID" \
     pullRequestId="$PR_ID" \
   --http-method POST \
-  --in-file /tmp/ado-thread.json \
+  --in-file "$TMPFILE" \
   --api-version 7.1 \
   -o json
 
-rm -f /tmp/ado-thread.json
+rm -f "$TMPFILE"
 ```
 
 **Note:** The `filePath` must start with `/` and be relative to the repo root.
@@ -284,13 +259,10 @@ Reply to an existing comment thread. The user must provide or you must determine
 Find the parent comment ID (usually `1` for the first comment in the thread):
 
 ```bash
-cat > /tmp/ado-reply.json << 'ENDOFJSON'
-{
-  "content": "$REPLY_TEXT",
-  "parentCommentId": 1,
-  "commentType": 1
-}
-ENDOFJSON
+TMPFILE=$(mktemp "${TMPDIR:-/tmp}/ado-reply-XXXXXX.json")
+jq -n --arg content "$REPLY_TEXT" \
+  '{content: $content, parentCommentId: 1, commentType: 1}' \
+  > "$TMPFILE"
 
 az devops invoke \
   --org "https://dev.azure.com/$ORG" \
@@ -302,11 +274,11 @@ az devops invoke \
     pullRequestId="$PR_ID" \
     threadId="$THREAD_ID" \
   --http-method POST \
-  --in-file /tmp/ado-reply.json \
+  --in-file "$TMPFILE" \
   --api-version 7.1 \
   -o json
 
-rm -f /tmp/ado-reply.json
+rm -f "$TMPFILE"
 ```
 
 Display the result:
@@ -331,11 +303,10 @@ Change a thread's status. Common actions:
 | "reopen" / "reactivate" | 1 (Active) |
 
 ```bash
-cat > /tmp/ado-status.json << 'ENDOFJSON'
-{
-  "status": $STATUS_VALUE
-}
-ENDOFJSON
+TMPFILE=$(mktemp "${TMPDIR:-/tmp}/ado-status-XXXXXX.json")
+jq -n --argjson status "$STATUS_VALUE" \
+  '{status: $status}' \
+  > "$TMPFILE"
 
 az devops invoke \
   --org "https://dev.azure.com/$ORG" \
@@ -347,11 +318,11 @@ az devops invoke \
     pullRequestId="$PR_ID" \
     threadId="$THREAD_ID" \
   --http-method PATCH \
-  --in-file /tmp/ado-status.json \
+  --in-file "$TMPFILE" \
   --api-version 7.1 \
   -o json
 
-rm -f /tmp/ado-status.json
+rm -f "$TMPFILE"
 ```
 
 **Resolve all active threads:** If the user says "resolve all threads", first list all threads, filter for status `1` (active) with `commentType: 1` comments, then update each one:

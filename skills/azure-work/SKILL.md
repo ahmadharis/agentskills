@@ -40,6 +40,8 @@ If the command fails, inform the user how to install it:
 - **Windows**: `winget install --exact --id Microsoft.AzureCLI`
 - **Linux**: `curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash`
 
+**Windows shell requirement:** All commands in this skill use bash syntax (`sed`, `mktemp`, `curl`, etc.). On Windows, run in **Git Bash** or **WSL** — PowerShell and cmd are not supported.
+
 Then ensure the Azure DevOps extension is installed:
 
 ```bash
@@ -222,7 +224,15 @@ az boards query --wiql "SELECT [System.Id], [System.Title], [System.State], [Sys
 
 **With team scope:** append the area path clause from Step 2a before `ORDER BY`.
 
-**With tag filter (when `ADO_WORK_ITEM_FILTER` is set):** append `AND [System.Tags] CONTAINS '$ADO_WORK_ITEM_FILTER'` before `ORDER BY`.
+**Sanitize filter value before use.** Before interpolating `ADO_WORK_ITEM_FILTER` into the WIQL query, escape any single quotes by doubling them (WIQL escape convention):
+
+```bash
+SAFE_FILTER=$(echo "$ADO_WORK_ITEM_FILTER" | sed "s/'/''/g")
+```
+
+Then use `$SAFE_FILTER` in the WIQL query instead of `$ADO_WORK_ITEM_FILTER`.
+
+**With tag filter (when `ADO_WORK_ITEM_FILTER` is set):** append `AND [System.Tags] CONTAINS '$SAFE_FILTER'` before `ORDER BY`.
 
 **Both filters can be combined.** Build the WHERE clause additively:
 
@@ -231,7 +241,7 @@ WHERE [System.State] <> 'Done'
   AND [System.State] <> 'Closed'
   AND [System.State] <> 'Removed'
   AND (<area path clause>)           -- only if ADO_TEAM is set
-  AND [System.Tags] CONTAINS '...'   -- only if ADO_WORK_ITEM_FILTER is set
+  AND [System.Tags] CONTAINS '$SAFE_FILTER'   -- only if ADO_WORK_ITEM_FILTER is set (sanitized)
 ORDER BY [Microsoft.VSTS.Common.Priority] ASC, [System.Id] ASC
 ```
 
@@ -281,8 +291,9 @@ Also display any non-empty custom fields that may contain additional requirement
 From the work item's `relations` array, find entries where `rel` is `"AttachedFile"`. Download each using an authenticated request:
 
 ```bash
-TOKEN=$(az account get-access-token --resource "499b84ac-1321-427f-aa17-267ca6975798" --query accessToken -o tsv)
-curl -s -H "Authorization: Bearer $TOKEN" -o "/tmp/$FILENAME" "$ATTACHMENT_URL"
+ATTACH_DIR=$(mktemp -d "${TMPDIR:-/tmp}/ado-attachments-XXXXXX")
+curl -s -H "Authorization: Bearer $(az account get-access-token --resource '499b84ac-1321-427f-aa17-267ca6975798' --query accessToken -o tsv)" \
+  -o "$ATTACH_DIR/$FILENAME" "$ATTACHMENT_URL"
 ```
 
 **Attempt to read ALL attachment types:**

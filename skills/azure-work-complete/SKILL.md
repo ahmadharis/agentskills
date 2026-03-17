@@ -143,3 +143,4 @@ If running in a `/loop`, the next iteration will begin at the scheduled time and
 - Work item priority ordering comes from the WIQL query in `azure-work` (priority ASC, ID ASC)
 - If any step fails (authentication, no items, build failure), the cycle stops and reports the error
 - The `azure-work` skill handles all Azure DevOps interaction — this skill only orchestrates the sequence
+- **Windows:** Requires **Git Bash** or **WSL** — all orchestrated skills use bash syntax
