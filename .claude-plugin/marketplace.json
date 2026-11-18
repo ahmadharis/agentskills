@@ -12,7 +12,7 @@
       "name": "agentskills",
       "source": "./",
       "description": "Skills for AI coding agents — Azure DevOps work items and pull requests, plus driving a Claude Code session on another machine",
-      "version": "1.6.0",
+      "version": "1.6.1",
       "license": "MIT",
       "keywords": ["azure-devops", "pull-requests", "work-items", "remote-control", "cross-session"]
     }

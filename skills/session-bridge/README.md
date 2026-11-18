@@ -4,6 +4,38 @@ Hand a task from one Claude Code session to another running on a different machi
 get the result back — built on Claude Code's **Remote Control** and **cross-session
 messaging**.
 
+## Quick start
+
+Set it up once. Run these **on both machines** (the one you drive from and the one being
+driven), signed into the **same** claude.ai account:
+
+```
+/login     # sign in to the SAME account on both machines
+/rc        # turn on Remote Control
+```
+
+Then, **only on the machine being driven**, give it a name and let it accept tasks:
+
+```
+/rename worker                         # a short name you'll address it by
+/config   → crossSessionInbound: accept   # let incoming tasks run
+```
+
+Check they can see each other — run on either machine:
+
+```
+/list-agents
+```
+
+Both sessions should appear and show **online**. Now, from the machine you drive from,
+just say it in plain language:
+
+> Tell the `worker` session to run the tests and report back.
+
+That's the whole loop. Keep a terminal open on each side — closing it takes that session
+offline. Full options, autonomy settings, and troubleshooting are in
+[references/setup.md](references/setup.md).
+
 ## What It Does
 
 Lets a **primary** session dispatch work to a **secondary** session on another machine
