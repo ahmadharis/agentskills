@@ -1,6 +1,6 @@
 # Azure DevOps Skills for Claude Code
 
-A collection of [Claude Code](https://claude.com/claude-code) skills that integrate with Azure DevOps for end-to-end work item management, PR creation, and post-merge cleanup. Works on macOS, Windows, and Linux.
+A collection of [Claude Code](https://claude.com/claude-code) skills: end-to-end Azure DevOps work item management, PR creation, and post-merge cleanup, plus cross-session orchestration for driving a Claude Code session on another machine. Works on macOS, Windows, and Linux.
 
 These skills follow the [Agent Skills](https://agentskills.io) open standard and are primarily built for Claude Code. They also work on **Codex CLI**, **Antigravity**, and other compatible tools — see [Compatibility](#compatibility) for details.
 
@@ -13,8 +13,9 @@ These skills follow the [Agent Skills](https://agentskills.io) open standard and
 | [pr-complete](skills/pr-complete/) | `/pr-complete` | Post-merge branch cleanup |
 | [azure-pr-comments](skills/azure-pr-comments/) | `/azure-pr-comments` | List, add, reply to, and resolve PR comment threads |
 | [azure-work-complete](skills/azure-work-complete/) | `/azure-work-complete` | Full autonomous cycle: pick up → implement → review → PR → cleanup |
+| [session-bridge](skills/session-bridge/) | `/session-bridge` | Hand a task to a Claude Code session on another machine and get the result back |
 
-> When installed as a plugin, skills are namespaced: `/agentskills:azure-work`, `/agentskills:azure-pr`, `/agentskills:azure-pr-comments`, `/agentskills:pr-complete`. When installed manually, the short names above apply.
+> When installed as a plugin, skills are namespaced: `/agentskills:azure-work`, `/agentskills:azure-pr`, `/agentskills:azure-pr-comments`, `/agentskills:pr-complete`, `/agentskills:session-bridge`. When installed manually, the short names above apply.
 
 ## Workflow
 
@@ -91,6 +92,7 @@ $skill-installer install https://github.com/ahmadharis/agentskills/tree/main/ski
 $skill-installer install https://github.com/ahmadharis/agentskills/tree/main/skills/pr-complete
 $skill-installer install https://github.com/ahmadharis/agentskills/tree/main/skills/azure-pr-comments
 $skill-installer install https://github.com/ahmadharis/agentskills/tree/main/skills/azure-work-complete
+$skill-installer install https://github.com/ahmadharis/agentskills/tree/main/skills/session-bridge
 ```
 
 ### Manual Installation
@@ -108,6 +110,7 @@ cp -r /tmp/agentskills/skills/azure-work .claude/skills/
 cp -r /tmp/agentskills/skills/pr-complete .claude/skills/
 cp -r /tmp/agentskills/skills/azure-pr-comments .claude/skills/
 cp -r /tmp/agentskills/skills/azure-work-complete .claude/skills/
+cp -r /tmp/agentskills/skills/session-bridge .claude/skills/
 ```
 
 Windows (PowerShell):
@@ -119,6 +122,7 @@ Copy-Item -Recurse $env:TEMP\agentskills\skills\azure-work .claude\skills\
 Copy-Item -Recurse $env:TEMP\agentskills\skills\pr-complete .claude\skills\
 Copy-Item -Recurse $env:TEMP\agentskills\skills\azure-pr-comments .claude\skills\
 Copy-Item -Recurse $env:TEMP\agentskills\skills\azure-work-complete .claude\skills\
+Copy-Item -Recurse $env:TEMP\agentskills\skills\session-bridge .claude\skills\
 ```
 
 **Global (for personal use across all projects):**
@@ -132,6 +136,7 @@ cp -r /tmp/agentskills/skills/azure-work ~/.claude/skills/
 cp -r /tmp/agentskills/skills/pr-complete ~/.claude/skills/
 cp -r /tmp/agentskills/skills/azure-pr-comments ~/.claude/skills/
 cp -r /tmp/agentskills/skills/azure-work-complete ~/.claude/skills/
+cp -r /tmp/agentskills/skills/session-bridge ~/.claude/skills/
 ```
 
 Windows (PowerShell):
@@ -143,6 +148,7 @@ Copy-Item -Recurse $env:TEMP\agentskills\skills\azure-work $env:USERPROFILE\.cla
 Copy-Item -Recurse $env:TEMP\agentskills\skills\pr-complete $env:USERPROFILE\.claude\skills\
 Copy-Item -Recurse $env:TEMP\agentskills\skills\azure-pr-comments $env:USERPROFILE\.claude\skills\
 Copy-Item -Recurse $env:TEMP\agentskills\skills\azure-work-complete $env:USERPROFILE\.claude\skills\
+Copy-Item -Recurse $env:TEMP\agentskills\skills\session-bridge $env:USERPROFILE\.claude\skills\
 ```
 
 After manual installation, restart Claude Code and verify the skills appear in the `/` menu.
@@ -220,6 +226,7 @@ See each skill's own README for detailed documentation:
 - [azure-pr-comments](skills/azure-pr-comments/README.md) — PR comment threads: list, add, reply, resolve, delete
 - [pr-complete](skills/pr-complete/README.md) — post-merge cleanup, branch deletion
 - [azure-work-complete](skills/azure-work-complete/README.md) — full autonomous cycle, /loop integration
+- [session-bridge](skills/session-bridge/README.md) — drive a Claude Code session on another machine over Remote Control and cross-session messaging
 
 ## License
 

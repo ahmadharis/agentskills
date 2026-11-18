@@ -5,16 +5,16 @@
     "url": "https://github.com/ahmadharis"
   },
   "metadata": {
-    "description": "Azure DevOps skills for AI coding agents"
+    "description": "Skills for AI coding agents — Azure DevOps workflows and cross-session orchestration"
   },
   "plugins": [
     {
       "name": "agentskills",
       "source": "./",
-      "description": "Azure DevOps skills — work items, pull requests, and post-merge cleanup",
-      "version": "1.5.0",
+      "description": "Skills for AI coding agents — Azure DevOps work items and pull requests, plus driving a Claude Code session on another machine",
+      "version": "1.6.0",
       "license": "MIT",
-      "keywords": ["azure-devops", "pull-requests", "work-items"]
+      "keywords": ["azure-devops", "pull-requests", "work-items", "remote-control", "cross-session"]
     }
   ]
 }
