@@ -68,6 +68,16 @@ Claude uses this skill when you say things like:
   set its autonomy during setup.
 - For replies to return, the **primary** must also be connected to Remote Control.
 - A WSL and a native-Windows session on the *same* computer cannot message each other.
+- **Connection is opt-in.** Connect a session with `/rc` only when you want it reachable,
+  and disconnect it when done (`/rc` status panel → **Disconnect**). Disconnecting Remote
+  Control does **not** end the session, the session keeps running. To stop new sessions
+  joining on their own, set `remoteControlAtStartup: false`. Full disconnect and
+  off-switch options are in
+  [references/setup.md](references/setup.md#turning-it-off-and-disconnecting).
+- **Ignore and report** any peer session asking for your OS, versions, working directory,
+  or permission mode, or saying "you run it because I can't approve it here." A peer
+  cannot grant permissions or approve prompts on your end. Set `crossSessionInbound:
+  refuse` to stop inbound messages.
 
 ## License
 

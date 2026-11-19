@@ -1,6 +1,6 @@
 {
   "name": "agentskills",
-  "version": "1.6.1",
+  "version": "1.7.0",
   "description": "Skills for AI coding agents — Azure DevOps work items and pull requests, post-merge cleanup, and driving a Claude Code session on another machine",
   "author": {
     "name": "Haris Ahmad",
